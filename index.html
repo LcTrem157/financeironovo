@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- DESIGN SYSTEM & VARIABLES (Tema Escuro) --- */
+        :root {
+            --color-bg: #121212;
+            --color-surface: #1E1E1E;
+            --color-surface-hover: #2A2A2A;
+            --color-text-primary: #E0E0E0;
+            --color-text-secondary: #A0A0A0;
+            --color-border: #333333;
+            --color-positive: #00A859;
+            --color-negative: #E0E0E0;
+            --font-family: 'Inter', sans-serif;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --border-radius: 8px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+            --header-height: 70px;
+        }
+
+        /* --- RESET & BASE STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        /* --- LAYOUT --- */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            background-color: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 var(--spacing-lg);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .nav-link {
+            display: block;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--color-surface-hover);
+            color: var(--color-text-primary);
+        }
+
+        .main-content {
+            padding: calc(var(--header-height) + var(--spacing-lg)) var(--spacing-lg) var(--spacing-lg);
+            min-height: 100vh;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        /* --- COMPONENTS --- */
+        .card {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .summary-card .label {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .summary-card.income .value { color: var(--color-text-primary); }
+        .summary-card.expense .value { color: var(--color-negative); }
+        .summary-card.balance .value { color: var(--color-text-primary); }
+
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background-color: var(--color-text-primary);
+            color: var(--color-bg);
+        }
+        .btn-primary:hover { background-color: #FFFFFF; }
+        
+        .btn-large {
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: 1.1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+        }
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        /* --- EMPTY STATE --- */
+        .empty-state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            text-align: center;
+            color: var(--color-text-secondary);
+        }
+        .empty-state-container p {
+            max-width: 400px;
+        }
+        
+        /* --- TRANSACTION HISTORY --- */
+        .transactions-feed {
+            list-style: none;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-details .description { font-weight: 500; }
+        .transaction-details .date { font-size: 0.75rem; color: var(--color-text-secondary); }
+        .transaction-amount { font-weight: 600; }
+        .transaction-amount.income { color: var(--color-positive); }
+        .transaction-amount.expense { color: var(--color-negative); }
+
+        /* --- DATE FILTER --- */
+        .date-filter {
+            display: flex;
+            background-color: var(--color-surface-hover);
+            border-radius: var(--border-radius);
+            padding: 4px;
+        }
+        .date-filter-btn {
+            padding: var(--spacing-xs) var(--spacing-md);
+            border: none;
+            background: transparent;
+            color: var(--color-text-secondary);
+            border-radius: calc(var(--border-radius) - 4px);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .date-filter-btn.active {
+            background-color: var(--color-surface);
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* --- CHARTS STYLES --- */
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* Pie Chart */
+        .pie-chart-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            width: 100%;
+        }
+        .pie-chart-svg {
+            max-width: 200px;
+            max-height: 200px;
+        }
+        .pie-chart-legend {
+            list-style: none;
+        }
+        .pie-chart-legend li {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: var(--spacing-sm);
+            flex-shrink: 0;
+        }
+
+        /* Bar Chart */
+        .bar-chart-container {
+            width: 100%;
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 250px;
+            padding: var(--spacing-md);
+            background-color: var(--color-surface-hover);
+            border-radius: var(--border-radius);
+        }
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .bar {
+            width: 40px;
+            background-color: var(--color-text-primary);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease-out;
+            margin-bottom: var(--spacing-xs);
+        }
+        .bar-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        .bar-label {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+        }
+        
+        /* Ranking */
+        .ranking-list {
+            list-style: none;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .ranking-item:last-child { border-bottom: none; }
+        .ranking-category { font-weight: 500; }
+        .ranking-value { font-weight: 600; color: var(--color-negative); }
+
+        /* --- GOAL CARD STYLES --- */
+        .goals-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+        }
+        .goal-card {
+            position: relative;
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .goal-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .goal-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+        .goal-name { font-size: 1.125rem; font-weight: 600; }
+        .goal-actions { cursor: pointer; color: var(--color-text-secondary); font-size: 1.5rem; line-height: 1; padding: var(--spacing-xs); }
+        .goal-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            z-index: 50;
+        }
+        .goal-dropdown a {
+            display: block;
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--color-text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .goal-dropdown a:hover { background-color: var(--color-surface-hover); }
+        .goal-dropdown a:first-child { border-radius: var(--border-radius) var(--border-radius) 0 0; }
+        .goal-dropdown a:last-child { border-radius: 0 0 var(--border-radius) var(--border-radius); }
+        .goal-details { color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-sm); }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--color-surface-hover);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--color-positive);
+            transition: width 0.5s ease-out;
+        }
+
+
+        /* --- MODAL --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background-color: var(--color-surface);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-md);
+        }
+        .modal-header {
+            margin-bottom: var(--spacing-md);
+        }
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-family: var(--font-family);
+            font-size: 1rem;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-text-primary);
+        }
+        .radio-group {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+        .radio-group .form-group {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+        .radio-group label {
+            display: block;
+            padding: var(--spacing-md);
+            border: 2px solid var(--color-border);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .radio-group input[type="radio"]:checked + label {
+            background-color: var(--color-surface-hover);
+            border-color: var(--color-text-primary);
+            color: var(--color-text-primary);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header com Navegação -->
+    <header class="header">
+        <div class="logo">Meu Financeiro</div>
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#dashboard" class="nav-link active" onclick="showPage('dashboard', this)">Visão Geral</a></li>
+                <li class="nav-item"><a href="#extrato" class="nav-link" onclick="showPage('extrato', this)">Extrato</a></li>
+                <li class="nav-item"><a href="#metas" class="nav-link" onclick="showPage('metas', this)">Metas</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">Visão Geral</h1>
+                <!-- Filtro de Período -->
+                <div class="date-filter">
+                    <button class="date-filter-btn" onclick="setPeriod('hoje')">Hoje</button>
+                    <button class="date-filter-btn" onclick="setPeriod('7dias')">7 dias</button>
+                    <button class="date-filter-btn active" onclick="setPeriod('mes')">Mês</button>
+                    <button class="date-filter-btn" onclick="setPeriod('ano')">Ano</button>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo -->
+            <div class="summary-cards">
+                <div class="card summary-card balance">
+                    <div class="label">Saldo no Período</div>
+                    <div class="value" id="saldo-total">R$ 0,00</div>
+                </div>
+                <div class="card summary-card income">
+                    <div class="label">Receitas</div>
+                    <div class="value" id="total-receitas">R$ 0,00</div>
+                </div>
+                <div class="card summary-card expense">
+                    <div class="label">Despesas</div>
+                    <div class="value" id="total-despesas">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Coluna da Esquerda: Gráfico de Barras -->
+                <div class="card">
+                    <div class="chart-container">
+                        <h2 class="chart-title">Despesas por Categoria</h2>
+                        <div class="bar-chart-container">
+                            <div id="bar-chart" class="bar-chart">
+                                <!-- Barras serão inseridas pelo JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna da Direita: Gráfico de Pizza e Ranking -->
+                <div>
+                    <!-- Gráfico de Pizza -->
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <div class="chart-container">
+                            <h2 class="chart-title">Distribuição de Gastos</h2>
+                            <div id="pie-chart-wrapper" class="pie-chart-wrapper">
+                                <!-- SVG e Legenda serão inseridos pelo JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking de Gastos -->
+                    <div class="card">
+                        <h2 class="chart-title">Ranking de Gastos</h2>
+                        <ul id="ranking-list" class="ranking-list">
+                            <!-- Itens do ranking serão inseridos pelo JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: var(--spacing-lg);">
+                <h2 style="margin-bottom: var(--spacing-md); font-size: 1.25rem;">Histórico de Transações</h2>
+                <ul id="historico-transacoes" class="transactions-feed">
+                    <!-- Transações serão inseridas aqui pelo JS -->
+                </ul>
+                <div id="historico-empty-state" class="empty-state-container">
+                    <p>Nenhuma transação registrada neste período. Vá para a aba "Extrato" para adicionar!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Extrato Page -->
+        <section id="extrato" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Extrato</h1>
+            </div>
+            <div class="card" style="text-align: center; padding: var(--spacing-lg);">
+                <p style="margin-bottom: var(--spacing-lg); color: var(--color-text-secondary);">Registre suas entradas e saídas de forma rápida e simples.</p>
+                <button class="btn btn-primary btn-large" onclick="openModal('modalRegistrarTransacao')">+ Registrar Transação</button>
+            </div>
+        </section>
+
+        <!-- Metas Page -->
+        <section id="metas" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Metas</h1>
+                <button class="btn btn-primary" onclick="openModalMetaCadastro()">+ Adicionar Meta</button>
+            </div>
+            <div id="goals-list" class="goals-list">
+                <!-- Metas serão inseridas aqui pelo JS -->
+            </div>
+            <div id="goals-empty-state" class="empty-state-container">
+                <p>Nenhuma meta definida. Comece a planejar seu futuro financeiro!</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal para Registrar Transação -->
+    <div id="modalRegistrarTransacao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Registrar Transação</h2>
+            </div>
+            <form id="form-transacao">
+                <div class="form-group">
+                    <label>Tipo da Transação</label>
+                    <div class="radio-group">
+                        <div class="form-group">
+                            <input type="radio" id="tipo-recebido" name="tipo" value="recebido" checked onchange="toggleCategoriaField()">
+                            <label for="tipo-recebido">Recebido</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="radio" id="tipo-enviado" name="tipo" value="enviado" onchange="toggleCategoriaField()">
+                            <label for="tipo-enviado">Enviado</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="categoria-group" class="form-group" style="display: none;">
+                    <label for="categoria">Categoria</label>
+                    <select id="categoria" class="form-control">
+                        <option value="Alimentação">Alimentação</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Lazer">Lazer</option>
+                        <option value="Compras online">Compras online</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="valor">Valor (R$)</label>
+                    <input type="number" id="valor" class="form-control" placeholder="0,00" step="0.01" required>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" style="background-color: var(--color-surface-hover);" onclick="closeModal('modalRegistrarTransacao')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarTransacao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Cadastrar/Editar Meta -->
+    <div id="modalMeta" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-meta-title" class="modal-title">Adicionar Meta</h2>
+            </div>
+            <form id="form-meta">
+                <input type="hidden" id="meta-id">
+                <div class="form-group">
+                    <label for="meta-nome">Nome da Meta</label>
+                    <input type="text" id="meta-nome" class="form-control" placeholder="Ex: Viagem para a Europa" required>
+                </div>
+                <div class="form-group">
+                    <label for="meta-valor-total">Valor Total (R$)</label>
+                    <input type="number" id="meta-valor-total" class="form-control" placeholder="0,00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="meta-valor-atual">Valor que eu tenho (R$)</label>
+                    <input type="number" id="meta-valor-atual" class="form-control" placeholder="0,00" step="0.01" required>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" style="background-color: var(--color-surface-hover);" onclick="closeModal('modalMeta')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarMeta()">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Adicionar Valor à Meta -->
+    <div id="modalAdicionarValor" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Adicionar Valor à Meta</h2>
+            </div>
+            <form id="form-adicionar-valor">
+                <input type="hidden" id="adicionar-valor-meta-id">
+                <div class="form-group">
+                    <label for="adicionar-valor">Quanto deseja adicionar? (R$)</label>
+                    <input type="number" id="adicionar-valor-input" class="form-control" placeholder="0,00" step="0.01" required>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" style="background-color: var(--color-surface-hover);" onclick="closeModal('modalAdicionarValor')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="adicionarValorMeta()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação (salvo na memória)
+        let estadoAplicacao = {
+            transacoes: [],
+            metas: [],
+            periodoSelecionado: 'mes' // Default: 'mes'
+        };
+
+        // --- Funções de UI ---
+        function showPage(pageId, linkElement) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(l => l.classList.remove('active'));
+            linkElement.classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function toggleCategoriaField() {
+            const tipo = document.querySelector('input[name="tipo"]:checked').value;
+            const categoriaGroup = document.getElementById('categoria-group');
+            if (tipo === 'enviado') {
+                categoriaGroup.style.display = 'block';
+            } else {
+                categoriaGroup.style.display = 'none';
+            }
+        }
+        
+        // --- Filtros de Data ---
+        function setPeriod(period) {
+            estadoAplicacao.periodoSelecionado = period;
+            
+            // Atualiza UI dos botões
+            document.querySelectorAll('.date-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Re-renderiza o dashboard
+            atualizarDashboard();
+        }
+
+        function filtrarTransacoesPorPeriodo(transacoes, periodo) {
+            const agora = new Date();
+            let dataInicio;
+
+            switch (periodo) {
+                case 'hoje':
+                    dataInicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+                    break;
+                case '7dias':
+                    dataInicio = new Date(agora.getTime() - (7 * 24 * 60 * 60 * 1000));
+                    break;
+                case 'mes':
+                    dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
+                    break;
+                case 'ano':
+                    dataInicio = new Date(agora.getFullYear(), 0, 1);
+                    break;
+                default:
+                    dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
+            }
+            // Garante que a data de início seja no início do dia
+            dataInicio.setHours(0, 0, 0, 0);
+            agora.setHours(23, 59, 59, 999);
+
+            return transacoes.filter(t => t.data >= dataInicio && t.data <= agora);
+        }
+
+        // --- Lógica de Transações ---
+        function salvarTransacao() {
+            const tipo = document.querySelector('input[name="tipo"]:checked').value;
+            const valorInput = document.getElementById('valor');
+            const valor = parseFloat(valorInput.value);
+
+            if (isNaN(valor) || valor <= 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+
+            let categoria = 'Receita';
+            if (tipo === 'enviado') {
+                categoria = document.getElementById('categoria').value;
+            }
+
+            const novaTransacao = {
+                id: Date.now(),
+                tipo: tipo,
+                categoria: categoria,
+                valor: valor,
+                data: new Date()
+            };
+
+            estadoAplicacao.transacoes.push(novaTransacao);
+            
+            document.getElementById('form-transacao').reset();
+            toggleCategoriaField();
+            closeModal('modalRegistrarTransacao');
+            atualizarDashboard();
+        }
+        
+        // --- Lógica de Metas ---
+        function openModalMetaCadastro(metaId = null) {
+            const form = document.getElementById('form-meta');
+            const title = document.getElementById('modal-meta-title');
+            form.reset();
+            
+            if (metaId) {
+                const meta = estadoAplicacao.metas.find(m => m.id === metaId);
+                if (meta) {
+                    document.getElementById('meta-id').value = meta.id;
+                    document.getElementById('meta-nome').value = meta.nome;
+                    document.getElementById('meta-valor-total').value = meta.valorTotal;
+                    document.getElementById('meta-valor-atual').value = meta.valorAtual;
+                    title.textContent = 'Editar Meta';
+                }
+            } else {
+                document.getElementById('meta-id').value = '';
+                title.textContent = 'Adicionar Meta';
+            }
+            openModal('modalMeta');
+        }
+
+        function salvarMeta() {
+            const id = document.getElementById('meta-id').value;
+            const nome = document.getElementById('meta-nome').value;
+            const valorTotal = parseFloat(document.getElementById('meta-valor-total').value);
+            const valorAtual = parseFloat(document.getElementById('meta-valor-atual').value);
+
+            if (!nome || isNaN(valorTotal) || isNaN(valorAtual) || valorTotal <= 0 || valorAtual < 0) {
+                alert('Por favor, preencha todos os campos corretamente.');
+                return;
+            }
+            if(valorAtual > valorTotal) {
+                alert('O valor atual não pode ser maior que o valor total da meta.');
+                return;
+            }
+
+            const metaData = { nome, valorTotal, valorAtual };
+
+            if (id) {
+                const index = estadoAplicacao.metas.findIndex(m => m.id == id);
+                if (index !== -1) {
+                    estadoAplicacao.metas[index] = { ...estadoAplicacao.metas[index], ...metaData };
+                }
+            } else {
+                const novaMeta = { id: Date.now(), ...metaData };
+                estadoAplicacao.metas.push(novaMeta);
+            }
+
+            closeModal('modalMeta');
+            atualizarInterfaceMetas();
+        }
+
+        function excluirMeta(metaId) {
+            if (confirm('Tem certeza que deseja excluir esta meta?')) {
+                estadoAplicacao.metas = estadoAplicacao.metas.filter(m => m.id !== metaId);
+                atualizarInterfaceMetas();
+            }
+        }
+
+        function openModalAdicionarValor(metaId) {
+            document.getElementById('adicionar-valor-meta-id').value = metaId;
+            document.getElementById('adicionar-valor-input').value = '';
+            openModal('modalAdicionarValor');
+        }
+
+        function adicionarValorMeta() {
+            const metaId = parseInt(document.getElementById('adicionar-valor-meta-id').value);
+            const valor = parseFloat(document.getElementById('adicionar-valor-input').value);
+
+            if (isNaN(valor) || valor <= 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+
+            const meta = estadoAplicacao.metas.find(m => m.id === metaId);
+            if (meta) {
+                meta.valorAtual += valor;
+                if(meta.valorAtual > meta.valorTotal) {
+                    meta.valorAtual = meta.valorTotal;
+                    alert('Parabéns! Você atingiu o valor total da meta!');
+                }
+            }
+            
+            closeModal('modalAdicionarValor');
+            atualizarInterfaceMetas();
+        }
+        
+        function toggleGoalDropdown(element) {
+            const dropdown = element.nextElementSibling;
+            document.querySelectorAll('.goal-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // --- Atualização da Interface ---
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        
+        function formatarData(data) {
+            return data.toLocaleDateString('pt-BR');
+        }
+
+        function atualizarDashboard() {
+            const transacoesFiltradas = filtrarTransacoesPorPeriodo(estadoAplicacao.transacoes, estadoAplicacao.periodoSelecionado);
+            
+            // 1. Calcular totais
+            let totalReceitas = 0;
+            let totalDespesas = 0;
+            const gastosPorCategoria = {};
+
+            transacoesFiltradas.forEach(t => {
+                if (t.tipo === 'recebido') {
+                    totalReceitas += t.valor;
+                } else {
+                    totalDespesas += t.valor;
+                    gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.valor;
+                }
+            });
+
+            const saldoTotal = totalReceitas - totalDespesas;
+
+            // 2. Atualizar cards de resumo
+            document.getElementById('saldo-total').textContent = formatarMoeda(saldoTotal);
+            document.getElementById('total-receitas').textContent = formatarMoeda(totalReceitas);
+            document.getElementById('total-despesas').textContent = formatarMoeda(totalDespesas);
+
+            // 3. Atualizar gráficos
+            atualizarGraficos(gastosPorCategoria, totalDespesas);
+
+            // 4. Atualizar histórico de transações na Visão Geral
+            const historicoContainer = document.getElementById('historico-transacoes');
+            const emptyState = document.getElementById('historico-empty-state');
+            
+            const ultimasTransacoes = transacoesFiltradas.slice(-5).reverse();
+
+            if (ultimasTransacoes.length === 0) {
+                historicoContainer.style.display = 'none';
+                emptyState.style.display = 'flex';
+            } else {
+                historicoContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+                
+                historicoContainer.innerHTML = ultimasTransacoes.map(t => `
+                    <li class="transaction-item">
+                        <div class="transaction-details">
+                            <div class="description">${t.categoria}</div>
+                            <div class="date">${formatarData(t.data)}</div>
+                        </div>
+                        <div class="transaction-amount ${t.tipo === 'recebido' ? 'income' : 'expense'}">
+                            ${t.tipo === 'recebido' ? '+' : '-'} ${formatarMoeda(t.valor)}
+                        </div>
+                    </li>
+                `).join('');
+            }
+        }
+
+        function atualizarGraficos(gastosPorCategoria, totalDespesas) {
+            const categoriasParaGrafico = ['Alimentação', 'Transporte', 'Lazer', 'Compras online', 'Outros'];
+            const dadosGrafico = categoriasParaGrafico.map(cat => ({
+                nome: cat,
+                valor: gastosPorCategoria[cat] || 0
+            }));
+
+            const dadosRanking = Object.entries(gastosPorCategoria)
+                .map(([nome, valor]) => ({ nome, valor }))
+                .sort((a, b) => b.valor - a.valor);
+
+            const barChartContainer = document.getElementById('bar-chart');
+            const maxValor = Math.max(...dadosGrafico.map(d => d.valor), 1);
+            
+            barChartContainer.innerHTML = dadosGrafico.map(d => `
+                <div class="bar-item">
+                    <div class="bar-value">${formatarMoeda(d.valor)}</div>
+                    <div class="bar" style="height: ${(d.valor / maxValor) * 100}%;"></div>
+                    <div class="bar-label">${d.nome}</div>
+                </div>
+            `).join('');
+
+            const pieChartWrapper = document.getElementById('pie-chart-wrapper');
+            const rankingList = document.getElementById('ranking-list');
+
+            if (totalDespesas === 0) {
+                pieChartWrapper.innerHTML = `<p style="color: var(--color-text-secondary);">Nenhuma despesa registrada.</p>`;
+                rankingList.innerHTML = `<li class="ranking-item"><span class="ranking-category">Nenhuma despesa</span><span class="ranking-value">R$ 0,00</span></li>`;
+            } else {
+                const cores = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+                let percentualAcumulado = 0;
+                
+                const svgCircles = dadosRanking.map((d, i) => {
+                    const percentual = (d.valor / totalDespesas) * 100;
+                    const offset = 25 - (percentualAcumulado * 0.6);
+                    percentualAcumulado += percentual;
+                    return `<circle cx="21" cy="21" r="15.915" fill="transparent" stroke="${cores[i % cores.length]}" stroke-width="3" stroke-dasharray="${percentual} ${100 - percentual}" stroke-dashoffset="${offset}"></circle>`;
+                }).join('');
+
+                const legend = dadosRanking.map((d, i) => {
+                    const percentual = ((d.valor / totalDespesas) * 100).toFixed(1);
+                    return `<li><span class="legend-color" style="background-color: ${cores[i % cores.length]};"></span> ${d.nome} (${percentual}%)</li>`;
+                }).join('');
+
+                pieChartWrapper.innerHTML = `
+                    <svg class="pie-chart-svg" viewBox="0 0 42 42">
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#E0E0E0" stroke-width="3"></circle>
+                        ${svgCircles}
+                    </svg>
+                    <ul class="pie-chart-legend">${legend}</ul>
+                `;
+
+                rankingList.innerHTML = dadosRanking.map(d => `
+                    <li class="ranking-item">
+                        <span class="ranking-category">${d.nome}</span>
+                        <span class="ranking-value">${formatarMoeda(d.valor)}</span>
+                    </li>
+                `).join('');
+            }
+        }
+        
+        function atualizarInterfaceMetas() {
+            const goalsList = document.getElementById('goals-list');
+            const emptyState = document.getElementById('goals-empty-state');
+
+            if (estadoAplicacao.metas.length === 0) {
+                goalsList.style.display = 'none';
+                emptyState.style.display = 'flex';
+            } else {
+                goalsList.style.display = 'grid';
+                emptyState.style.display = 'none';
+                
+                goalsList.innerHTML = estadoAplicacao.metas.map(meta => {
+                    const progressPercent = (meta.valorAtual / meta.valorTotal) * 100;
+                    return `
+                        <div class="goal-card">
+                            <div class="goal-card-header">
+                                <span class="goal-name">${meta.nome}</span>
+                                <span class="goal-actions" onclick="toggleGoalDropdown(this)">...</span>
+                                <div class="goal-dropdown">
+                                    <a href="#" onclick="event.preventDefault(); openModalMetaCadastro(${meta.id});">Editar</a>
+                                    <a href="#" onclick="event.preventDefault(); openModalAdicionarValor(${meta.id});">Adicionar Valor</a>
+                                    <a href="#" onclick="event.preventDefault(); excluirMeta(${meta.id});">Excluir</a>
+                                </div>
+                            </div>
+                            <div class="goal-details">
+                                ${formatarMoeda(meta.valorAtual)} de ${formatarMoeda(meta.valorTotal)}
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            const today = new Date();
+            const month = monthNames[today.getMonth()];
+            const year = today.getFullYear();
+            document.getElementById('current-date').textContent = `${month} de ${year}`;
+
+            atualizarDashboard();
+            atualizarInterfaceMetas();
+        });
+
+        // Fecha o modal se o usuário clicar fora dele
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+        // Fecha dropdowns se clicar fora
+        document.addEventListener('click', function(event) {
+            if (!event.target.matches('.goal-actions')) {
+                document.querySelectorAll('.goal-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+
+    </script>
+
+</body>
+</html>
